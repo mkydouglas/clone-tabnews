@@ -1,11 +1,26 @@
-import database from "../../../../infra/database.js"
+import database from "../../../../infra/database.js";
 
 async function status(request, response) {
-  const result = await database.query('SELECT 1 + 1 as sum;');
-  console.log(result.rows);
-  response
-    .status(200)
-    .json({ chave: "alunos do curso.dev são pessoas acima da média" });
+  const updatedAt = new Date().toISOString();
+
+  const db = await database.query("SHOW server_version");
+  const serverVersion = db.rows[0].server_version;
+
+  const max = await database.query("SHOW max_connections");
+  const maxConnections = max.rows[0].max_connections;
+
+  const totalConnections = await database.query(
+    "SELECT COUNT(*) AS total_connections FROM pg_stat_activity WHERE datname = 'local_db' GROUP BY datname;",
+  );
+  const tc = totalConnections.rows[0].total_connections;
+  console.log(tc);
+
+  response.status(200).json({
+    updated_at: updatedAt,
+    server_version: parseInt(serverVersion),
+    max_connections: parseInt(maxConnections),
+    total_connections: parseInt(tc),
+  });
 }
 
 export default status;
