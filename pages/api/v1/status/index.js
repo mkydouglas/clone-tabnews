@@ -10,16 +10,18 @@ async function status(request, response) {
   const maxConnections = max.rows[0].max_connections;
 
   const totalConnections = await database.query(
-    "SELECT COUNT(*) AS total_connections FROM pg_stat_activity WHERE datname = 'local_db' GROUP BY datname;",
+    "SELECT COUNT(*)::int AS total_connections FROM pg_stat_activity WHERE datname = 'local_db' GROUP BY datname;",
   );
   const tc = totalConnections.rows[0].total_connections;
   console.log(tc);
 
   response.status(200).json({
     updated_at: updatedAt,
-    server_version: parseInt(serverVersion),
-    max_connections: parseInt(maxConnections),
-    total_connections: parseInt(tc),
+    dependencies: {
+      version: parseInt(serverVersion),
+      max_connections: parseInt(maxConnections),
+      opened_connections: tc,
+    },
   });
 }
 
